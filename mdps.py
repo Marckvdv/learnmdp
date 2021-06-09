@@ -58,8 +58,36 @@ def get_simple2():
 
 	for state1, state2 in [(s1, s3), (s2, s4), (s3, s0), (s4, s0)]:
 		for a in ['l','r','g']:
+		#for a in ['g']:
 			state1.add_transition(a, state2, one)
 	m = MDP([s0,s1,s2,s3,s4], s0, ['l','r','g'], [0,1,2])
+	assert m.check()
+	return m
+	
+def get_simple2n(n=1):
+	s0 = State('s0', 0)
+	s1 = State('s1', 0)
+	s2 = State('s2', 0)
+	s3 = State('s3', 1)
+	s4 = State('s4', 2)
+
+	actions = [chr(ord('a')+i) for i in range(2+n)]
+	one = sympy.Rational(1,1)
+	s0.add_transition(actions[0], s1, one)
+	s0.add_transition(actions[1], s2, one)
+
+	for i in range(n):
+		action = actions[2+i]
+		prob = sympy.Rational(1,i+2)
+		
+		s0.add_transition(action, s1, prob)
+		s0.add_transition(action, s2, 1-prob)
+
+	for state1, state2 in [(s1, s3), (s2, s4), (s3, s0), (s4, s0)]:
+		for a in actions:
+		#for a in ['g']:
+			state1.add_transition(a, state2, one)
+	m = MDP([s0,s1,s2,s3,s4], s0, actions, [0,1,2])
 	assert m.check()
 	return m
 
