@@ -24,3 +24,15 @@ def distribution_eq(a, b, epsilon=1e-3):
 			return False
 	return True
 	
+current_depth = 0
+def start_finish_print(func):
+	def wrapper(*args, **kwargs):
+		#global current_depth
+		#print("{}>>> {}".format('\t'*current_depth, func.__name__))
+		#current_depth += 1
+		result = func(*args, **kwargs)
+		#current_depth -= 1
+		#print("{}<<< {}".format('\t'*current_depth, func.__name__))
+
+		return result
+	return wrapper
