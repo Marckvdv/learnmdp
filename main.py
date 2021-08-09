@@ -1,5 +1,7 @@
 import mdp
+import observation_table
 import models
+
 import sympy
 import numpy as np
 import time
@@ -11,11 +13,11 @@ m = models.get_test1()
 print(m.to_dot())
 print(f"MDP has {len(m.states)} states")
 assert m.check()
-config1 = { 'linear_close': True, 'linear_hypothesis': True, 'tries': 100, 'max_observation_length': 5 }
+config1 = { 'linear_close': True, 'linear_hypothesis': True, 'tries': 100, 'max_observation_length': 5, 'cex': 'all_suffixes'}
 
-table = mdp.ObservationsTable(m, m.observation_mapping, config1)
+table = observation_table.ObservationTable(m, m.observation_mapping, config1)
 
-h = table.learn_mdp2()
+h = table.learn_mdp()
 assert m.try_find_counter_example(h, 100, 15) is None
 table.print_observation_table()
 print(h.to_dot())
