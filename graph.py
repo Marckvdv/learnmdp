@@ -25,27 +25,27 @@ def graph1():
 
 def graph2():
 	x = list(range(1, 12))
-	y1 = [5, 5, 5, 5,  5,  5,  5,  5,  5,  5,  5]
-	y2 = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+	y1 = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+	y2 = [5, 5, 5, 5,  5,  5,  5,  5,  5,  5,  5]
 
 	graph_double_line(x, y1, y2, yaxis="states", title="State count versus n (simple)")
 	plt.savefig('graphs/graph2.png')
 
 def graph3():
 	x = list(range(1, 11))
-	y1 = [52, 136, 297, 332, 466, 488, 1135, 584, 787, 1948]
-	y2 = [52, 196, 480, 732, 1670, 2468, 5427, 8004, 18695, 26060]
+	y1 = [52, 196, 480, 732, 1670, 2468, 5427, 8004, 18695, 26060]
+	y2 = [52, 136, 297, 332, 466, 488, 1135, 584, 787, 1948]
 
 	graph_double_line(x, y1, y2, yaxis="membership queries", title="Membership queries versus n (chain)")
 	plt.savefig('graphs/graph3.png')
 
-#def graph4():
-#	x = list(range(1, 11))
-#	y1 = [48, 84, 180, 
-#	y2 = [
-#
-#	graph_double_line(x, y1, y2, yaxis="membership queries", title="Membership queries versus n (chain)")
-#	plt.savefig('graphs/graph4.png')
+def graph4():
+	x = list(range(1, 11))
+	y1 = [66, 148, 280, 474, 742, 1096, 1548, 2110, 2794, 3612, ]
+	y2 = [48, 116, 280, 474, 252, 328, 576, 510, 1100, 1020]
+
+	graph_double_line(x, y1, y2, yaxis="membership queries", title="Membership queries versus n (simple)")
+	plt.savefig('graphs/graph4.png')
 
 graph1()
 graph2()

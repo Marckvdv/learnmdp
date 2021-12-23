@@ -140,13 +140,27 @@ class MDP:
 			for input_symbol, mapping in state.transitions.items():
 				for next_state, probability in mapping.items():
 					if probability != 0:
-						s += f'{state.name} -> {next_state.name} [label="{input_symbol}:{round(float(probability), 2)}" ];\n'
+						s += f'{state.name} -> {next_state.name} [label="{input_symbol}:{probability}" ];\n'
 
 		for state in self.states:
 			s += f'{state.name}[label="{state.observation}"]\n'
 
 		s += "}"
 		return s
+	
+	def get_max_depth(self):
+		states_reached = { self.initial_state }
+		depth = 0
+		while len(states_reached) != len(self.states):
+			depth += 1
+			current_set = states_reached.copy()
+			for s in states_reached:
+				for i, d in s.transitions.items():
+					for sr, prob in d.items():
+						if prob > 0:
+							current_set.add(sr)
+			states_reached = current_set
+		return depth
 
 if __name__ == '__main__':
 	print("Wrong file!")

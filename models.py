@@ -135,6 +135,54 @@ def get_chain(n=3):
 
 	return MDP([start_state] + left_states + right_states + end_states, start_state, actions, [i for i in range(n+1)], f'chain_{n}')
 
+def get_chain2(n=3):
+	# assumed to be of sufficient length
+	odd_primes = [3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 71]
+	start_state = State('s0', 0)
+	left_states, right_states, end_states = [], [], []
+	one = sympy.Rational(1,1)
+	half = sympy.Rational(1,2)
+	for i in range(n):
+		left_states.append(State(f's{i}_l', i+1))
+		right_states.append(State(f's{i}_r', i+1))
+		end_states.append(State(f's{i}_e', i))
+	
+	actions = ['a', 'b', 'c', 'd']
+	start_state.add_transition('a', left_states[0], one)
+	start_state.add_transition('b', right_states[0], one)
+	start_state.add_transition('c', left_states[0], half)
+	start_state.add_transition('c', right_states[0], half)
+	start_state.add_transition('d', start_state, one)
+
+	for i in range(n-1):
+		p1 = sympy.Rational(1, odd_primes[i])
+		p2 = 1-p1
+
+		left_states[i].add_transition('a', left_states[i+1], one)
+		left_states[i].add_transition('b', right_states[i+1], one)
+
+		right_states[i].add_transition('a', right_states[i+1], one)
+		right_states[i].add_transition('b', left_states[i+1], one)
+
+		left_states[i].add_transition('c', left_states[i+1], p1)
+		left_states[i].add_transition('c', right_states[i+1], p2)
+
+		right_states[i].add_transition('c', right_states[i+1], p1)
+		right_states[i].add_transition('c', left_states[i+1], p2)
+
+	
+	for i in range(n):
+		left_states[i].add_transition('d', end_states[i], one)
+		right_states[i].add_transition('d', end_states[n-1-i], one)
+		for a in actions:
+			end_states[i].add_transition(a, end_states[i], one)
+
+	for a in actions[:-1]:
+		for s in [left_states[-1], right_states[-1]]:
+			s.add_transition(a, start_state, one)
+
+	return MDP([start_state] + left_states + right_states + end_states, start_state, actions, [i for i in range(n+1)], f'chain_{n}')
+
 def get_test1():
 	s1 = State('s1', 0)
 	s2 = State('s2', 0)

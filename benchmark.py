@@ -34,8 +34,8 @@ def main():
 	print(f"writing output to prefix '{output_file}' is that okay?")
 	input()
 
-	config1 = { 'linear_close': True, 'linear_hypothesis': True, 'tries': 50000, 'max_observation_length': 14 }
-	config2 = { 'linear_close': False, 'linear_hypothesis': False, 'tries': 50000, 'max_observation_length': 14 }
+	config1 = { 'linear': True, 'tries': 50000, 'max_observation_length': 14 }
+	config2 = { 'linear': False, 'tries': 50000, 'max_observation_length': 14 }
 
 	#configs = [config1, config2]
 	configs = [config1]
