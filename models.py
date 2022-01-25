@@ -240,5 +240,29 @@ def get_random_deterministic(state_count=10, input_count=3, observation_count=5)
 
 	return MDP(states, initial_state, inputs, observations)
 
+def get_simple3():
+	s0 = State('s0', '1')
+	s1 = State('s1', '1')
+	s2 = State('s2', '1')
+	s3 = State('s3', '2')
+	s4 = State('s4', '3')
+	states = [s0, s1, s2, s3, s4]
+	inputs = ['a', 'b', 'c']
+	observations = ['1', '2', '3']
+
+	one = sympy.Rational(1)
+	x = sympy.Rational(1,4)
+	s0.add_transition('a', s1, one)
+	s0.add_transition('b', s2, one)
+	s0.add_transition('c', s1, x)
+	s0.add_transition('c', s2, 1-x)
+
+	fixed_transitions = [ (s1, s3), (s2, s4), (s3, s3), (s4, s4) ]
+	for from_state, to_state in fixed_transitions:
+		for i in inputs:
+			from_state.add_transition(i, to_state, one)
+	
+	return MDP(states, s0, inputs, observations)
+
 if __name__ == '__main__':
 	print("Wrong file!")

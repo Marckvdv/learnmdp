@@ -140,7 +140,8 @@ class MDP:
 			for input_symbol, mapping in state.transitions.items():
 				for next_state, probability in mapping.items():
 					if probability != 0:
-						s += f'{state.name} -> {next_state.name} [label="{input_symbol}:{probability}" ];\n'
+						ps = "{:.2f}".format(float(probability))
+						s += f'{state.name} -> {next_state.name} [label="{input_symbol}:{ps}" ];\n'
 
 		for state in self.states:
 			s += f'{state.name}[label="{state.observation}"]\n'

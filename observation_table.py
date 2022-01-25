@@ -80,31 +80,33 @@ class ObservationTable:
 		for i, d in zip(independent_vectors, decomps):
 			if d is None:
 				prefix = row_to_prefix[util.HashableArray(i)]
+				print("Independent vector", prefix)
 				self.add_short_prefix(prefix)
+				return True
 				change = True
 		assert change or len(independent_vectors) == 0
 
 		return change
 
-	def make_consistent(self):
-		self.stats['make_consistent'] += 1
+	#def make_consistent(self):
+	#	self.stats['make_consistent'] += 1
 
-		for s1, s2 in itertools.combinations(self.short_prefixes, 2):
-			if not self.row_eq(s1, s2):
-				continue
+	#	for s1, s2 in itertools.combinations(self.short_prefixes, 2):
+	#		if not self.row_eq(s1, s2):
+	#			continue
 
-			for i, o in itertools.product(self.mdp.inputs, self.mdp.observations):
-				t = self.distributions[(s1, i)]
-				#print("T:",t, "o:", o)
-				if t and o in t and t[o] > 0 and not self.row_eq((s1[0], s1[1] + ((i, o),)), (s2[0], s2[1] + ((i, o),))):
-					for e in self.suffixes:
-						t1 = self.distributions[((s1[0], s1[1] + ((i, o),) + e[0]), e[1])]
-						t2 = self.distributions[((s2[0], s2[1] + ((i, o),) + e[0]), e[1])]
-						if not util.distribution_eq(t1, t2):
-							self.suffixes.add((e[0] + ((i, o),), e[1]))
-							return True
+	#		for i, o in itertools.product(self.mdp.inputs, self.mdp.observations):
+	#			t = self.distributions[(s1, i)]
+	#			#print("T:",t, "o:", o)
+	#			if t and o in t and t[o] > 0 and not self.row_eq((s1[0], s1[1] + ((i, o),)), (s2[0], s2[1] + ((i, o),))):
+	#				for e in self.suffixes:
+	#					t1 = self.distributions[((s1[0], s1[1] + ((i, o),) + e[0]), e[1])]
+	#					t2 = self.distributions[((s2[0], s2[1] + ((i, o),) + e[0]), e[1])]
+	#					if not util.distribution_eq(t1, t2):
+	#						self.suffixes.add((e[0] + ((i, o),), e[1]))
+	#						return True
 
-		return False
+	#	return False
 
 	def add_short_prefix(self, p):
 		self.short_prefixes.add(p)
@@ -179,14 +181,73 @@ class ObservationTable:
 				trace = p + s[0]
 				print(str(self.get_distribution(trace, s[1])).ljust(n), end='')
 			print()
-	
-	def get_row(self, prefix):
-		#print("PREFIX:", prefix)
-		row = []
-		for s in self.suffixes:
-			row.append(self.get_distribution((prefix[0], prefix[1] + s[0]), s[1]))
 
-		return row
+	def print_observation_table_latex(self):
+		def prefix_to_string(p):
+			initial, rest = p
+			s = f"$\\trace{{\\obs{{obs{initial}}}"
+			for i, o in rest:
+				s += f"\\ {i}\\ \\obs{{obs{o}}}"
+			s += "}$"
+			return s
+
+		def suffix_to_string(p):
+			rest, final = p
+			s = "$\\trace{"
+			for i, o in rest:
+				s += f"{i}\\ \\obs{{obs{o}}}\\ "
+			s += final
+			s += "}$"
+			return s
+
+		def distribution_to_string(d):
+			def format_num(n):
+				if n in [0,1]:
+					return str(n)
+				else:
+					return f"\\frac{{ {n.p} }}{{ {n.q} }}"
+				
+
+			s = ""
+			elems = list(d.items())
+			if not elems:
+				return s
+			initial, rest = elems[0], elems[1:]
+			s += f"$\\ket{{ {format_num(initial[1])} }}{{ \\obs{{ obs{initial[0]} }} }}"
+
+			for o, p in rest:
+				s += f" + \\ket{{ {format_num(p)} }}{{ \\obs{{ obs{o} }} }}"
+			s += "$"
+
+			return s
+
+
+		nl = "\\\\[5pt]"
+		f = "l|" + "l" * len(self.suffixes)
+		print(f"\\begin{{tabular}}{{ {f} }}")
+		for s in self.suffixes:
+			print("&"+suffix_to_string(s))
+		print(nl)
+		print("\\toprule")
+
+		for p in self.short_prefixes:
+			print(prefix_to_string(p), end="")
+			for s in self.suffixes:
+				trace = p + s[0]
+				d = self.get_distribution(trace, s[1])
+				print("&" + distribution_to_string(d), end="")
+			print(nl)
+		print("\\midrule")
+
+		for p in self.long_prefixes:
+			print(prefix_to_string(p), end="")
+			for s in self.suffixes:
+				trace = p + s[0]
+				d = self.get_distribution(trace, s[1])
+				print("&" + distribution_to_string(d), end="")
+			print(nl)
+		print("\\bottomrule")
+		print("\\end{tabular}")
 	
 	def get_matrix_row(self, prefix):
 		size = (len(self.suffixes)+1)*len(self.mdp.observations)
@@ -215,6 +276,7 @@ class ObservationTable:
 		iteration = 0
 		while True:
 			#self.fix_table()
+			#self.print_observation_table()
 			while self.make_closed():# or self.make_consistent():
 				#print("done one iteration of make closed")
 				#self.fix_table()
@@ -364,6 +426,14 @@ class ObservationTable:
 			r = self.get_matrix_row(p)
 			prefix_to_row[p] = r
 
+		decomps = self.get_vector_decompositions([self.get_matrix_row(p) for p in self.short_prefixes])
+		independent = 0
+		for d in decomps:
+			if d is None:
+				independent += 1
+		print("idp", independent)
+
+
 		prime_rows = []
 		prime_rows_by_observation = {o:[] for o in self.mdp.observations}
 		for p in self.short_prefixes:
@@ -395,7 +465,6 @@ class ObservationTable:
 				if extended_trace in self.short_prefixes:
 					state.add_transition(i, states[util.HashableArray(next_row)], p1)
 				else:
-
 					vector = self.get_matrix_row(extended_trace)
 					solution = self.get_probabilistic_decomposition(prime_rows, vector)
 					assert solution is not None
@@ -408,12 +477,64 @@ class ObservationTable:
 
 
 		return mdp.MDP(list(states.values()), initial_state, self.mdp.inputs, self.mdp.observations)
-
 	def create_hypothesis_linear2(self):
 		states = {}
+		prefix_to_row = {}
+		access_sequence = {}
+
+		unique_rows = []
 		for p in self.short_prefixes:
-			output = self.get_last(p)
-			states[p] = State(f's{len(states)}', output)
+			r = util.HashableArray(self.get_matrix_row(p))
+			if not any(map(lambda v: np.array_equal(v, r.arr), unique_rows)):
+				unique_rows.append(r.arr)
+				access_sequence[r] = p
+				output = self.get_last(p)
+
+			prefix_to_row[p] = r.arr
+
+		for p in self.long_prefixes:
+			r = self.get_matrix_row(p)
+			prefix_to_row[p] = r
+
+		vector_decomposition = self.get_vector_decompositions(unique_rows)
+		prime_rows_by_observation = {o:[] for o in self.mdp.observations}
+		prime_rows = []
+		for r, d in zip(unique_rows, vector_decomposition):
+			if d is None:
+				output = self.get_last(p)
+				prime_rows_by_observation[output].append(r)
+				prime_rows.append(r)
+				p = access_sequence[util.HashableArray(r)]
+				states[util.HashableArray(r)] = mdp.State(f's{len(states)}', output)
+
+		initial_prefix = self.mdp.initial_state.observation, ()
+		initial_row = prefix_to_row[initial_prefix]
+		initial_row_ap = access_sequence[util.HashableArray(initial_row)]
+		initial_state = states[util.HashableArray(prefix_to_row[initial_row_ap])]
+
+		#for p, r in prefix_to_row.items():
+		#print("PR:", prime_rows)
+		for r in prime_rows:
+			p = access_sequence[util.HashableArray(r)]
+			state = states[util.HashableArray(r)]
+
+			for i, o in itertools.product(self.mdp.inputs, self.mdp.observations):
+				extended_trace = p[0], p[1] + ((i, o),)
+				p1 = self.get_probability(p, i, o)
+				if p1 == 0:
+					continue
+				next_row = prefix_to_row[extended_trace]
+				if extended_trace in self.short_prefixes:
+					state.add_transition(i, states[util.HashableArray(next_row)], p1)
+				else:
+					vector = self.get_matrix_row(extended_trace)
+					solution = self.get_probabilistic_decomposition(prime_rows_by_observation[o], vector)
+					assert solution is not None
+
+					for row, prob in solution.items():
+						#print(state, i, states[row], prob)
+						state.add_transition(i, states[row], p1*prob)
+
 
 		return mdp.MDP(list(states.values()), initial_state, self.mdp.inputs, self.mdp.observations)
 	
@@ -460,20 +581,20 @@ class ObservationTable:
 		else:
 			return None
 
-	def get_probabilistic_decomposition3(self, vectors, vector):
-		# Get unique vectors and establish an ordering
-		matrix = sympy.Matrix()
-		for v in vectors:
-			matrix.col_insert(matrix.shape[1], v)
+	#def get_probabilistic_decomposition3(self, vectors, vector):
+	#	# Get unique vectors and establish an ordering
+	#	matrix = sympy.Matrix()
+	#	for v in vectors:
+	#		matrix.col_insert(matrix.shape[1], v)
 
-		vector_count = matrix.shape[1]
-		solution = util.linprog(matrix, vector)
+	#	vector_count = matrix.shape[1]
+	#	solution = util.linprog(matrix, vector)
 
-		if solution is not None:
-			probs = { vectors[i]: solution.x[i] for i in range(len(unique_vectors)) }
-			return probs
-		else:
-			return None
+	#	if solution is not None:
+	#		probs = { vectors[i]: solution.x[i] for i in range(len(unique_vectors)) }
+	#		return probs
+	#	else:
+	#		return None
 	
 	def get_vector_decompositions(self, vectors):
 		if len(vectors) == 0: return []

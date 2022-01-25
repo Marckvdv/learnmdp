@@ -1,5 +1,6 @@
 import mdp
-import models
+import observation_table as ob
+import models as m
 import sympy
 import numpy as np
 import time
@@ -12,12 +13,12 @@ output_file = sys.argv[1] if len(sys.argv) > 1 else 'bench_results'
 
 def do_benchmark(model, config, n=3):
 	assert model.check()
-	output_name = f'{output_file}_{model.name}_{"linear" if config["linear_close"] else "non_linear"}.txt'
+	output_name = f'{output_file}_{model.name}_{"linear" if config["linear"] else "non_linear"}.txt'
 	with open(output_name, 'w') as f:
 		for _ in range (n):
 			start = time.time()
 
-			table = mdp.ObservationsTable(model, model.observation_mapping, config)
+			table = ob.ObservationTable(model, model.observation_mapping, config)
 
 			h = table.learn_mdp()
 			end = time.time()
@@ -37,11 +38,11 @@ def main():
 	config1 = { 'linear': True, 'tries': 50000, 'max_observation_length': 14 }
 	config2 = { 'linear': False, 'tries': 50000, 'max_observation_length': 14 }
 
-	#configs = [config1, config2]
-	configs = [config1]
+	configs = [config1, config2]
+	#configs = [config1]
 	#configs = [config2]
-	m1 = [models.get_simple2n(n) for n in range(1, 12)]
-	m2 = [models.get_chain(n) for n in range(1, 12)]
+	m1 = [m.get_simple2n(n) for n in range(1, 12)]
+	m2 = [m.get_chain(n) for n in range(1, 12)]
 	models = []
 	model_n = {}
 
